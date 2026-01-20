@@ -4,6 +4,11 @@ name: Snyk SAST for Go
 on:
   workflow_call:
     inputs:
+      snyk-version:
+        description: >
+          Version of Snyk CLI to be installed.
+        type: string
+        default: 'latest'
       runner-type:
         description: 'GH runner type'
         type: string
@@ -48,6 +53,8 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: snyk/actions/setup@master
+        with:
+          snyk-version: ${{ inputs.snyk-version }}
 
       - name: Prepare Go build tools
         uses: actions/setup-go@v3
