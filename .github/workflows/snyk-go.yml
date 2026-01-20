@@ -58,11 +58,6 @@ on:
 jobs:
   snyk-go:
     runs-on: ${{ inputs.runner-type }}
-    strategy:
-      fail-fast: ${{ inputs.fail-fast }}
-      matrix:
-        path: ${{ fromJSON(inputs.paths) }}
-        snyk-token-secret: ${{ fromJSON(inputs.snyk-token-secrets) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -76,4 +71,5 @@ jobs:
       # Configurable severity-threshold if the job should fail or not
       - name: Snyk test (PR)
         run: snyk test --severity-threshold=${{ inputs.severity-threshold }} ${{ inputs.extra-cli-params }}
-        working-directory: ${{ matrix.path }}
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
