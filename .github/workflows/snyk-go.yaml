@@ -13,20 +13,6 @@ on:
         description: 'Version of Go to be installed.'
         type: string
         default: '1.17'
-      # e.g. '["snyk-api-token-saas-and-platform-cps"]'
-      snyk-token-secrets:
-        required: true
-        description: >
-          List of the secret IDs (AWS secret manager - us-east-1 region) with service account tokens for Snyk.
-          Results are loaded to all provided organizations.
-        type: string
-      # e.g.: '["atlas-cm", "deployment/pulumi"]'
-      paths:
-        required: true
-        description: >
-          List of the paths in the repository that should be scanned!
-          Important - format must be List written as String.
-        type: string
       severity-threshold:
         description: >
           On pull-requests it is possible to define threshold whether job should fail
