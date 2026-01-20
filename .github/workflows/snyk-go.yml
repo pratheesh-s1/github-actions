@@ -1,0 +1,79 @@
+---
+name: Snyk SAST for Go
+# yamllint disable-line rule:truthy
+on:
+  workflow_call:
+    inputs:
+      runner-type:
+        description: 'GH runner type'
+        type: string
+        default: sentinel-general-use-runner
+      go-version:
+        required: true
+        description: 'Version of Go to be installed.'
+        type: string
+        default: '1.17'
+      # e.g. '["snyk-api-token-saas-and-platform-cps"]'
+      snyk-token-secrets:
+        required: true
+        description: >
+          List of the secret IDs (AWS secret manager - us-east-1 region) with service account tokens for Snyk.
+          Results are loaded to all provided organizations.
+        type: string
+      # e.g.: '["atlas-cm", "deployment/pulumi"]'
+      paths:
+        required: true
+        description: >
+          List of the paths in the repository that should be scanned!
+          Important - format must be List written as String.
+        type: string
+      severity-threshold:
+        description: >
+          On pull-requests it is possible to define threshold whether job should fail
+          or not if vulnerabilities are found.
+        type: string
+        default: 'high'
+      extra-cli-params:
+        description: 'Additional params to snyk test/monitor commands on given repository.'
+        type: string
+        default: ''
+      fail-fast:
+        description: >
+          Indicates if the checks for the rest of the `paths` should stop after first
+          failure.
+        type: boolean
+        default: false
+      use-snyk-delta:
+        description: >
+          In PR builds, runs snyk-delta instead of snyk test if true. Snyk-delta compares the new vulnerabilities with
+          the baseline project (e.g. the target branch) that is already monitored by snyk. Fails if only new
+          vulnerabilities are part of this PR.
+        type: boolean
+        default: false
+      ignore-missing-baseline:
+        description: >
+          If no baseline snyk project can be resolved, there will be no snyk test report and step will pass.
+        type: boolean
+        default: true
+jobs:
+  snyk-go:
+    runs-on: ${{ inputs.runner-type }}
+    strategy:
+      fail-fast: ${{ inputs.fail-fast }}
+      matrix:
+        path: ${{ fromJSON(inputs.paths) }}
+        snyk-token-secret: ${{ fromJSON(inputs.snyk-token-secrets) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: snyk/actions/setup@master
+
+      - name: Prepare Go build tools
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ inputs.go-version }}
+
+      # Configurable severity-threshold if the job should fail or not
+      - name: Snyk test (PR)
+        run: snyk test --severity-threshold=${{ inputs.severity-threshold }} ${{ inputs.extra-cli-params }}
+        working-directory: ${{ matrix.path }}
